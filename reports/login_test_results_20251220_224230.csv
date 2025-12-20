@@ -1,0 +1,4 @@
+﻿Project,Application,Micro_Application,Test_Case_Title,Test_Description,Expected_Result,Actual_Result,Status,Remark,Task_ID,Ticket_ID
+Tower Track,Web,Login Module,Login without credentials,Click login without entering data,Validation message should appear,Validation message displayed,Pass,,1923,
+Tower Track,Web,Login Module,Login with invalid credentials,Enter wrong email/password,Error alert should appear,Error alert displayed,Pass,Alert handled,1923,
+Tower Track,Web,Login Module,Login with valid credentials,Enter correct email/password,Dashboard should load,Dashboard loaded successfully,Pass,,1923,
