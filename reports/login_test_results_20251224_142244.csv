@@ -1,0 +1,7 @@
+﻿Project,Application,Micro_Application,Test_Case_Title,Test_Description,Expected_Result,Actual_Result,Status,Remark,Task_ID,Ticket_ID
+Tower Track,Web,Navigation,Open Facility Status Tracker,Click Part Allocation → Facility Status Tracker,Facility page should open,Facility page opened,Pass,,SO-01,
+Tower Track,Web,Strategic Overview,Verify Strategic Overview load,Wait for map SVG,Strategic Overview should load,Strategic Overview loaded,Pass,,SO-02,
+Tower Track,Web,Strategic Overview,Verify KPI values,Read KPI values from table,KPI values should be present,"KPI values: [75, 14, 10, 74, 9]",Pass,,SO-03,
+Tower Track,Web,Strategic Overview,Verify map hover,Hover facility map circles,Map should respond,435 map points found,Pass,,SO-04,
+Tower Track,Web,Strategic Overview,Verify KPI table hover,Hover table rows and switch view,Rows should highlight,51 facilities found,Pass,,SO-05,
+Tower Track,Web,Strategic Overview,Verify KPI bar chart hover,Hover KPI bars,Bar chart should respond,156 bars detected,Pass,,SO-06,

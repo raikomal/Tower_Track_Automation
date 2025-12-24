@@ -1,0 +1,3 @@
+﻿Project,Application,Micro_Application,Test_Case_Title,Test_Description,Expected_Result,Actual_Result,Status,Remark,Task_ID,Ticket_ID
+Tower Track,Web,Navigation,Open Facility Status Tracker,Navigate via Part Allocation Insights,Facility page should open,Facility page opened,Pass,,SO-01,
+Tower Track,Web,Strategic Overview,Verify page load,Strategic Overview default tab,Widgets visible,Widgets loaded,Pass,,SO-02,

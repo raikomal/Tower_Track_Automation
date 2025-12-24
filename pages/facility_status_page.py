@@ -359,121 +359,79 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 
 class FacilityStatusPage:
+    """
+    Page Object for Facility Status Tracker – Strategic Overview
+    """
 
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 40)
 
     # =========================================================
-    # STRATEGIC OVERVIEW
+    # STRATEGIC OVERVIEW LOAD (MAP SVG = PAGE READY)
     # =========================================================
-    def verify_strategic_overview_loaded(self):
+    def verify_map_visible(self):
         self.wait.until(
-            EC.presence_of_element_located(
-                (
+            lambda d: len(
+                d.find_elements(
                     By.XPATH,
-                    "//*[name()='svg']//*[name()='path' and contains(@class,'highcharts-point')]"
+                    "//*[contains(@class,'highcharts-point')]"
                 )
-            )
+            ) > 0
         )
         return True
 
     # =========================================================
-    # MAP SECTION
+    # SCROLL HELPERS
     # =========================================================
     def scroll_to_map_section(self):
+        """
+        Scroll to Status of All Facilities (Map section)
+        """
         header = self.wait.until(
             EC.presence_of_element_located(
-                (By.XPATH, "//div[contains(text(),'Status of All Facilities')]")
+                (By.XPATH, "//h2[normalize-space()='Status of All Facilities']")
             )
         )
         self.driver.execute_script(
             "arguments[0].scrollIntoView({block:'center'});", header
         )
-        time.sleep(2)
+        time.sleep(0.5)
 
-    # def verify_map_visible(self):
-    #     self.wait.until(
-    #         lambda d: len(
-    #             d.find_elements(
-    #                 By.XPATH,
-    #                 "//*[name()='svg']//*[name()='path' and contains(@class,'highcharts-point')]"
-    #             )
-    #         ) > 0
-    #     )
-    #     return True
-
-    def verify_map_visible(self):
-        points = self.wait.until(
-            EC.presence_of_all_elements_located(
-                (By.XPATH, "//*[contains(@class,'highcharts-point')]")
-            )
-        )
-        return len(points) > 0
-
-    # def get_facility_map_points(self):
-    #     return self.driver.find_elements(
-    #         By.XPATH,
-    #         "//*[name()='svg']//*[name()='path' and contains(@class,'highcharts-point')]"
-    #     )
-    def get_facility_map_points(self):
-        return self.wait.until(
-            EC.presence_of_all_elements_located(
-                (By.XPATH, "//*[contains(@class,'highcharts-point')]")
-            )
-        )
-
-    # def hover_on_map_point(self, point):
-    #     self.driver.execute_script(
-    #         "arguments[0].scrollIntoView({block:'center'});", point
-    #     )
-    #     ActionChains(self.driver).move_to_element(point).pause(0.6).perform()
-    def hover_on_map_point(self, point):
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", point
-        )
-        ActionChains(self.driver).move_to_element(point).pause(1).perform()
-
-    def hover_multiple_map_circles(self, count=5):
-        points = self.get_facility_map_points()
-        assert len(points) > 0, "❌ No map points found"
-
-        for p in points[:count]:
-            self.driver.execute_script(
-                "arguments[0].scrollIntoView({block:'center'});", p
-            )
-            ActionChains(self.driver).move_to_element(p).pause(1).perform()
-
-        return True
-
-    # =========================================================
-    # KPI CARDS
-    # =========================================================
-    def get_all_kpi_values(self):
+    def scroll_to_kpi_table(self):
         """
-        Reads KPI CARD values from Strategic Overview
-        Example values: 80.10%, 12.40%, 7.50%
+        Scroll to Facility KPIs table
         """
-
-        # Wait until KPI cards are visible
-        self.wait.until(
+        header = self.wait.until(
             EC.presence_of_element_located(
+                (By.XPATH, "//h2[normalize-space()='Facility KPIs']")
+            )
+        )
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", header
+        )
+        time.sleep(0.5)
+
+    # =========================================================
+    # KPI CARDS (TOP METRICS)
+    # =========================================================
+    def get_kpi_card_values(self):
+        """
+        Read KPI cards at top (percentage values)
+        """
+        cards = self.wait.until(
+            EC.presence_of_all_elements_located(
                 (
                     By.XPATH,
-                    "//div[contains(@class,'relative') and contains(@class,'justify-center')]//*[contains(text(),'%')]"
+                    "//div[contains(@class,'relative flex items-center justify-center')]"
+                    "//span[contains(text(),'%')]"
                 )
             )
         )
 
-        elements = self.driver.find_elements(
-            By.XPATH,
-            "//div[contains(@class,'relative') and contains(@class,'justify-center')]//*[contains(text(),'%')]"
-        )
-
         values = []
-
-        for el in elements:
-            text = el.text.strip()
+        for c in cards:
+            text = c.text.strip()
             if "%" in text:
                 try:
                     values.append(float(text.replace("%", "")))
@@ -483,52 +441,129 @@ class FacilityStatusPage:
         return values
 
     # =========================================================
+    # MAP FUNCTIONS (HIGHCHARTS SVG)
+    # =========================================================
+    def get_facility_map_points(self):
+        return self.driver.find_elements(
+            By.XPATH,
+            "//*[contains(@class,'highcharts-point')]"
+        )
+
+    def hover_on_map_point(self, point):
+        """
+        Hover a single map circle
+        """
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", point
+        )
+        ActionChains(self.driver).move_to_element(point).pause(0.5).perform()
+
+    def hover_multiple_map_circles(self, count=5):
+        points = self.get_facility_map_points()
+        for p in points[:count]:
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", p
+            )
+            ActionChains(self.driver).move_to_element(p).pause(0.4).perform()
+        return True
+
+    # =========================================================
     # KPI TABLE
     # =========================================================
-    def scroll_to_kpi_table(self):
-        table = self.wait.until(
+    def wait_for_kpis_to_load(self):
+        self.wait.until(
             EC.presence_of_element_located(
-                (By.XPATH, "//h2[normalize-space()='Facility KPIs']")
+                (By.XPATH, "//tbody/tr")
             )
         )
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", table
+        return True
+
+    def get_all_kpi_values(self):
+        rows = self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//tbody/tr")
+            )
         )
-        time.sleep(2)
+
+        values = []
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, "td")
+            for col in cols[1:]:  # skip facility name
+                txt = col.text.strip()
+                if "%" in txt:
+                    try:
+                        values.append(int(txt.replace("%", "")))
+                    except ValueError:
+                        pass
+
+        return values
 
     def get_all_kpi_facilities(self):
         rows = self.wait.until(
-            EC.presence_of_all_elements_located((By.XPATH, "//tbody//tr"))
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//tbody/tr")
+            )
         )
-        return rows
 
-    def hover_on_kpi_row(self, row):
-        ActionChains(self.driver).move_to_element(row).pause(0.5).perform()
+        facilities = []
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, "td")
+            if cols:
+                facilities.append(cols[0].text.strip())
 
-    def switch_kpi_view(self, value):
+        return facilities
+    def hover_on_kpi_row(self, facility_name):
+        """
+        Hover a KPI table row by facility name
+        """
+        cell = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.XPATH, f"//td[normalize-space()='{facility_name}']")
+            )
+        )
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", cell
+        )
+        ActionChains(self.driver).move_to_element(cell).pause(0.5).perform()
+
+    # =========================================================
+    # KPI VIEW DROPDOWN (TABLE / BAR CHART)
+    # =========================================================
+    def switch_kpi_view(self, view="table"):
+        """
+        Switch KPI dropdown view
+        values: 'table' or 'barchart'
+        """
         dropdown = self.wait.until(
             EC.presence_of_element_located(
                 (By.XPATH, "//h2[normalize-space()='Facility KPIs']/following::select[1]")
             )
         )
-        Select(dropdown).select_by_visible_text(value)
-        time.sleep(2)
+        Select(dropdown).select_by_value(view)
+        time.sleep(1)
 
     # =========================================================
     # KPI BAR CHART
     # =========================================================
     def get_kpi_bars(self):
+        """
+        Return bar chart SVG bars
+        """
         return self.wait.until(
             EC.presence_of_all_elements_located(
                 (
                     By.XPATH,
                     "//h2[normalize-space()='Facility KPIs']"
-                    "/ancestor::div//*[name()='path' and contains(@class,'highcharts-point')]"
+                    "/ancestor::div[contains(@class,'rounded')]"
+                    "//*[contains(@class,'highcharts-point')]",
                 )
             )
         )
 
     def hover_on_kpi_bar(self, bar):
+        """
+        Hover KPI bar chart element
+        """
         self.driver.execute_script(
             "arguments[0].scrollIntoView({block:'center'});", bar
         )
