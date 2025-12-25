@@ -1,3 +1,0 @@
-﻿Project,Application,Micro_Application,Test_Case_Title,Test_Description,Expected_Result,Actual_Result,Status,Remark,Task_ID,Ticket_ID
-Tower Track,Web,Navigation,Open Facility Status Tracker,Click Part Allocation → Facility Status Tracker,Facility page should open,Facility page opened,Pass,,SO-01,
-Tower Track,Web,Strategic Overview,Verify Strategic Overview load,Wait for map SVG,Strategic Overview should load,Strategic Overview loaded,Pass,,SO-02,
