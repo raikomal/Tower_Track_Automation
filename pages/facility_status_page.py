@@ -95,7 +95,7 @@
 # # #     ActionChains(self.driver).move_to_element(point).pause(1).perform()
 #
 #
-# # # # 🔥 NEW METHOD — CLIENT DEMO SAFE
+# # # #  NEW METHOD — CLIENT DEMO SAFE
 # # # def hover_multiple_map_circles(self, count=5):
 # # #     """
 # # #     Hover 4–5 random facility circles
@@ -665,6 +665,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+
 class FacilityStatusPage:
     """
     Page Object: Facility Status Tracker – Strategic Overview
@@ -681,11 +682,12 @@ class FacilityStatusPage:
     def wait_for_map_svg_once(self):
         """
         Wait ONLY ONCE for Highcharts map bubbles to exist.
-        This must be called immediately after navigation.
+        Call immediately after navigation.
         """
         self.wait.until(
             EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "g.highcharts-mapbubble-series path.highcharts-point")
+                (By.CSS_SELECTOR,
+                 "g.highcharts-mapbubble-series path.highcharts-point")
             )
         )
         return True
@@ -696,22 +698,26 @@ class FacilityStatusPage:
     def scroll_to_map_section(self):
         header = self.wait.until(
             EC.presence_of_element_located(
-                (By.XPATH, "//h2[normalize-space()='Status of All Facilities']")
+                (By.XPATH,
+                 "//h2[normalize-space()='Status of All Facilities']")
             )
         )
         self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", header
+            "arguments[0].scrollIntoView({block:'center'});",
+            header
         )
         time.sleep(0.3)
 
     def scroll_to_kpi_table(self):
         header = self.wait.until(
             EC.presence_of_element_located(
-                (By.XPATH, "//h2[normalize-space()='Facility KPIs']")
+                (By.XPATH,
+                 "//h2[normalize-space()='Facility KPIs']")
             )
         )
         self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", header
+            "arguments[0].scrollIntoView({block:'center'});",
+            header
         )
         time.sleep(0.3)
 
@@ -722,7 +728,6 @@ class FacilityStatusPage:
         """
         Reads KPI cards at top (80.10%, 12.40%, 7.50%)
         """
-        # KPI cards are the BIG % numbers at top
         cards = self.wait.until(
             EC.presence_of_all_elements_located(
                 (
@@ -734,8 +739,8 @@ class FacilityStatusPage:
         )
 
         values = []
-        for c in cards:
-            txt = c.text.strip()
+        for card in cards:
+            txt = card.text.strip()
             if "%" in txt:
                 try:
                     values.append(float(txt.replace("%", "")))
@@ -745,12 +750,11 @@ class FacilityStatusPage:
         return values
 
     # =========================================================
-    # MAP → FULFILLMENT RATE ONLY
+    # MAP → FULFILLMENT RATE
     # =========================================================
     def get_facility_map_points(self):
         """
         Returns map bubbles ONLY.
-        No waits here (already loaded).
         """
         self.scroll_to_map_section()
 
@@ -763,11 +767,15 @@ class FacilityStatusPage:
         points = self.get_facility_map_points()
         assert len(points) > 0, "No map points found"
 
-        for p in points[:count]:
+        for point in points[:count]:
             self.driver.execute_script(
-                "arguments[0].scrollIntoView({block:'center'});", p
+                "arguments[0].scrollIntoView({block:'center'});",
+                point
             )
-            ActionChains(self.driver).move_to_element(p).pause(0.4).perform()
+            ActionChains(self.driver)\
+                .move_to_element(point)\
+                .pause(0.4)\
+                .perform()
 
         return True
 
@@ -804,6 +812,7 @@ class FacilityStatusPage:
                         values.append(float(txt.replace("%", "")))
                     except ValueError:
                         pass
+
         return values
 
     def hover_on_kpi_row(self, facility_name):
@@ -813,9 +822,13 @@ class FacilityStatusPage:
             )
         )
         self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", cell
+            "arguments[0].scrollIntoView({block:'center'});",
+            cell
         )
-        ActionChains(self.driver).move_to_element(cell).pause(0.4).perform()
+        ActionChains(self.driver)\
+            .move_to_element(cell)\
+            .pause(0.4)\
+            .perform()
 
     # =========================================================
     # KPI VIEW SWITCH
@@ -826,44 +839,147 @@ class FacilityStatusPage:
         """
         dropdown = self.wait.until(
             EC.presence_of_element_located(
-                (By.XPATH, "//h2[normalize-space()='Facility KPIs']/following::select[1]")
+                (By.XPATH,
+                 "//h2[normalize-space()='Facility KPIs']/following::select[1]")
             )
         )
         Select(dropdown).select_by_value(view)
         time.sleep(0.8)
 
     # =========================================================
-    # BAR CHART → REALLOCATION RATE ONLY
+    # BAR CHART → REALLOCATION RATE
     # =========================================================
     def get_bar_chart_columns(self):
-        """
-        Returns bar chart columns ONLY (Facility Status Readiness Summary)
-        """
-        # wait only for column-series group (NOT aria-label)
         self.wait.until(
             EC.presence_of_element_located(
+                (By.CSS_SELECTOR,
+                 "g.highcharts-series.highcharts-column-series")
+            )
+        )
+
+        return self.driver.find_elements(
+            By.CSS_SELECTOR,
+            "g.highcharts-series.highcharts-column-series "
+            "path.highcharts-point"
+        )
+
+    def hover_on_bar(self, bar):
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});",
+            bar
+        )
+
+        ActionChains(self.driver)\
+            .move_to_element(bar)\
+            .pause(0.3)\
+            .move_by_offset(10, -10)\
+            .pause(0.5)\
+            .perform()
+
+    # =========================================================
+    # =========================================================
+    # SANKEY CHART (SAFE VERSION)
+    # =========================================================
+    def hover_flow_links(self, count=5):
+        """
+        Hover over Sankey flow links (Highcharts path elements)
+        """
+        links = self.get_flow_links()
+        count = min(count, len(links))
+
+        for link in links[:count]:
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", link
+            )
+            ActionChains(self.driver) \
+                .move_to_element(link) \
+                .pause(0.5) \
+                .perform()
+
+        return True
+
+    def verify_sankey_chart_visible(self):
+        self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//*[name()='path' and contains(@class,'highcharts-link')]")
+            )
+        )
+        return True
+
+    def get_flow_links(self):
+        return self.driver.find_elements(
+            By.XPATH,
+            "//*[name()='path' and contains(@class,'highcharts-link')]"
+        )
+
+    def hover_single_flow_link(self):
+        links = self.get_flow_links()
+        assert links, "No Sankey links found"
+
+        link = links[0]
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", link
+        )
+        ActionChains(self.driver).move_to_element(link).pause(0.6).perform()
+
+    def get_sankey_tooltip_text(self):
+        tooltips = self.driver.find_elements(
+            By.XPATH,
+            "//*[name()='g' and contains(@class,'highcharts-tooltip')]//*[name()='text']"
+        )
+        return " ".join(t.text.strip() for t in tooltips if t.text.strip())
+
+    def validate_sankey_tooltip_structure(self, tooltip_text: str):
+        """
+        Valid Sankey tooltip can be:
+        - Node tooltip (label only)
+        - OR Link tooltip (source → target with value)
+        """
+        if not tooltip_text:
+            return False
+
+        has_text = any(char.isalpha() for char in tooltip_text)
+        has_number = any(char.isdigit() for char in tooltip_text)
+        has_arrow = "→" in tooltip_text or "to" in tooltip_text.lower()
+
+        # Accept node OR link tooltip
+        return has_text and (has_number or has_arrow)
+
+    def hover_multiple_sankey_links(self, count=5):
+        links = self.get_flow_links()
+        hovered = 0
+
+        for link in links[:count]:
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", link
+            )
+            ActionChains(self.driver).move_to_element(link).pause(0.4).perform()
+            hovered += 1
+
+        return hovered
+
+    def sankey_tooltip_has_non_zero_value(self, tooltip_text):
+        numbers = []
+        for part in tooltip_text.replace(",", "").split():
+            try:
+                numbers.append(float(part))
+            except ValueError:
+                pass
+        return any(n > 0 for n in numbers)
+
+    # =========================================================
+    # SANKEY DROPDOWN (Distributor → Facility Flow)
+    # =========================================================
+    def get_sankey_dropdown(self):
+        """
+        Returns Sankey chart dropdown (Distributor selector)
+        """
+        return self.wait.until(
+            EC.presence_of_element_located(
                 (
-                    By.CSS_SELECTOR,
-                    "g.highcharts-series.highcharts-column-series"
+                    By.XPATH,
+                    "//div[@class='flex items-center gap-2 mr-2']//select"
                 )
             )
         )
 
-        bars = self.driver.find_elements(
-            By.CSS_SELECTOR,
-            "g.highcharts-series.highcharts-column-series path.highcharts-point"
-        )
-
-        return bars
-
-    def hover_on_bar(self, bar):
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", bar
-        )
-
-        ActionChains(self.driver) \
-            .move_to_element(bar) \
-            .pause(0.3) \
-            .move_by_offset(10, -10) \
-            .pause(0.5) \
-            .perform()

@@ -1,9 +1,0 @@
-﻿Project,Application,Micro_Application,Test_Case_Title,Test_Description,Expected_Result,Actual_Result,Status,Remark,Task_ID,Ticket_ID
-Tower Track,Web,Navigation,Open Facility Status Tracker,Navigate via Part Allocation Insights,Facility Status page should open,Facility Status page opened,Pass,,SO-01,
-Tower Track,Web,Strategic Overview,Verify page load,Wait for Highcharts map,Map should render,Map rendered,Pass,,SO-02,
-Tower Track,Web,Strategic Overview,Verify KPI cards,Read KPI summary cards,KPI cards should be visible,"KPI values: [80.1, 12.4, 7.5]",Pass,,SO-03,
-Tower Track,Web,Strategic Overview,Verify map hover,Hover on facility map bubbles,Tooltip should appear,51 map points detected,Pass,,SO-04,
-Tower Track,Web,Strategic Overview,Verify KPI table hover,Hover facility KPI rows,Rows should highlight,51 facilities found,Pass,,SO-05,
-Tower Track,Web,Strategic Overview,Verify bar chart hover,Hover readiness bars,Tooltip should appear,160 bars detected,Pass,,SO-06,
-Tower Track,Web,Strategic Overview,Facility KPI table validation,Scroll to KPI table and verify headers & facility row,KPI headers and facility data should be visible,Failure: 'SliderPage' object has no attribute 'click_slider',Fail,,KPI-TABLE-01,
-Tower Track,Web,Strategic Overview,Map to KPI to Map interaction flow validation,"Hover on map point, scroll KPI table and hover KPI row",Map and KPI should react to each other correctly,Failure: 'SliderPage' object has no attribute 'click_slider',Fail,,MAP-KPI-01,

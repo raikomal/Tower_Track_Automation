@@ -6,3 +6,6 @@ Tower Track,Web,Login Module,Enter valid email,Enter registered email,Email shou
 Tower Track,Web,Login Module,Enter valid password,Enter correct password,Password should be accepted,Password entered,Pass,,LG-06,
 Tower Track,Web,Login Module,Click Login,Submit login form,Dashboard should load,Login submitted,Pass,,LG-07,
 Tower Track,Web,Login Module,Verify Dashboard,Wait for dashboard,Dashboard should be visible,Dashboard loaded successfully,Pass,,LG-08,
+Tower Track,Web,Strategic Overview,Verify Sankey chart visible,Navigate to Distributor → Facility Flow,Sankey chart should render,Sankey chart rendered,Pass,,SO-07,
+Tower Track,Web,Strategic Overview,Verify Sankey hover interaction,Hover Sankey flow links,Flows should be interactive,130 Sankey links detected,Pass,,SO-08,
+Tower Track,Web,Strategic Overview,Verify Sankey dropdown interaction,Change facility dropdown & hover flows,Sankey should redraw and remain interactive,11 dropdown options detected,Pass,,SO-09,
