@@ -944,6 +944,155 @@ class FacilityStatusPage:
 
         print("✅ Part Dependency Graph tab closed and returned to parent")
 
+        # Navigate to Impact Analysis tab
+
+    def go_to_impact_analysis(self):
+        tab = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//button[normalize-space()='Impact Analysis']")
+            )
+        )
+        tab.click()
+        time.sleep(1.5)
+
+        print("✅ Navigated to Impact Analysis")
+
+    def get_impact_filters(self):
+        filters = {}
+
+        try:
+            status = self.wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//label[contains(text(),'Status')]/following::select[1]")
+                )
+            )
+            filters["status"] = Select(status).first_selected_option.text.strip()
+        except:
+            filters["status"] = None
+
+        try:
+            part = self.wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+                )
+            )
+            filters["part"] = Select(part).first_selected_option.text.strip()
+        except:
+            filters["part"] = None
+
+        return filters
+
+    def select_impact_status(self, value):
+        dropdown = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//label[contains(text(),'Status')]/following::select[1]")
+            )
+        )
+        Select(dropdown).select_by_value(value)
+        time.sleep(1)
+        print(f"✅ Impact Status selected: {value}")
+
+    def select_impact_part(self, part_name):
+        dropdown = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+            )
+        )
+        Select(dropdown).select_by_visible_text(part_name)
+        time.sleep(1)
+        print(f"✅ Impact Part selected: {part_name}")
+
+    def get_impact_table_rows(self):
+        time.sleep(1)
+
+        rows = self.driver.find_elements(
+            By.XPATH, "//h3[contains(text(),'Impact')]/following::tbody/tr"
+        )
+
+        print(f"ℹ️ Impact rows: {len(rows)}")
+        return rows
+
+    # ================= IMPACT ANALYSIS → ALLOCATION RECOMMENDATION =================
+
+    def go_to_impact_analysis(self):
+        """
+        Explicitly switch to Impact Analysis tab (React-safe)
+        """
+
+        impact_tab = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//button[normalize-space()='Impact Analysis']")
+            )
+        )
+
+        # React-safe click
+        self.driver.execute_script(
+            "arguments[0].click();", impact_tab
+        )
+
+        # ✅ Wait until Impact Analysis content appears
+        self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//h2[contains(text(),'Allocation Recommendation')]")
+            )
+        )
+
+        print("✅ Switched to Impact Analysis tab")
+        return True
+
+    def select_impact_facility(self, facility_name):
+        """
+        Select Facility dropdown
+        """
+        dropdown = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//label[normalize-space()='Select Facility:']/following-sibling::select")
+            )
+        )
+        Select(dropdown).select_by_visible_text(facility_name)
+        time.sleep(1.5)
+        print(f"✅ Impact Facility selected: {facility_name}")
+
+    def select_impact_start_date(self, date_value):
+        """
+        date_value format: YYYY-MM-DD
+        """
+        start_date = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//label[normalize-space()='Start Date:']/following-sibling::input")
+            )
+        )
+        start_date.clear()
+        start_date.send_keys(date_value)
+        time.sleep(1)
+        print(f"✅ Start Date selected: {date_value}")
+
+    def select_impact_end_date(self, date_value):
+        """
+        date_value format: YYYY-MM-DD
+        """
+        end_date = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//label[normalize-space()='End Date:']/following-sibling::input")
+            )
+        )
+        end_date.clear()
+        end_date.send_keys(date_value)
+        time.sleep(1)
+        print(f"✅ End Date selected: {date_value}")
+
+    def click_get_recommendation(self):
+        """
+        Click Get Recommendation button
+        """
+        btn = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//button[normalize-space()='Get Recommendation']")
+            )
+        )
+        btn.click()
+        time.sleep(3)
+        print("✅ Get Recommendation clicked")
 
 
 
