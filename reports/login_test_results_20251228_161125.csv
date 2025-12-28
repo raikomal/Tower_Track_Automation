@@ -1,0 +1,8 @@
+﻿Tower Track,Web,Login Module,Launch browser,Open Chrome browser,Browser should launch,Browser launched successfully,Pass,,LG-01,
+Tower Track,Web,Login Module,Open Tower Track URL,Navigate to application URL,Login page should load,Login page loaded,Pass,,LG-02,
+Tower Track,Web,Login Module,Login without credentials,Click login without entering data,Validation message should appear,Validation message displayed,Pass,,LG-03,
+Tower Track,Web,Login Module,Login with invalid credentials,Enter wrong email and password,Error alert should appear,Error alert displayed,Pass,Alert handled,LG-04,
+Tower Track,Web,Login Module,Enter valid email,Enter registered email,Email should be accepted,Email entered,Pass,,LG-05,
+Tower Track,Web,Login Module,Enter valid password,Enter correct password,Password should be accepted,Password entered,Pass,,LG-06,
+Tower Track,Web,Login Module,Click Login,Submit login form,Dashboard should load,Login submitted,Pass,,LG-07,
+Tower Track,Web,Login Module,Verify Dashboard,Wait for dashboard,Dashboard should be visible,Dashboard loaded successfully,Pass,,LG-08,
