@@ -1282,30 +1282,35 @@ class FacilityStatusPage:
         print("✅ Compute Cost Impact clicked")
 
     def modify_allocation_and_compute_cost(self):
+        from selenium.webdriver.common.by import By
         from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.support import expected_conditions as EC
         import time
 
-        # Click Modify Allocation
+        actions = ActionChains(self.driver)
+
+        # ================= CLICK MODIFY ALLOCATION =================
         modify_btn = self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//button[normalize-space()='Modify Allocation']")
             )
         )
-        modify_btn.click()
+        self.driver.execute_script("arguments[0].click();", modify_btn)
         print("✅ Modify Allocation clicked")
-
         time.sleep(1)
 
-        # Scroll to Modify Allocation section
+        # ================= SCROLL TO MODIFY ALLOCATION HEADER =================
         header = self.wait.until(
             EC.presence_of_element_located(
                 (By.XPATH, "//h3[normalize-space()='Modify Allocation']")
             )
         )
-        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", header)
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", header
+        )
         time.sleep(1)
 
-        # Allocation cells (3 rows, 3rd column)
+        # ================= UPDATE ALLOCATION VALUES =================
         cell_xpaths = [
             "//tbody/tr[1]/td[3]",
             "//tbody/tr[2]/td[3]",
@@ -1319,49 +1324,84 @@ class FacilityStatusPage:
                 EC.presence_of_element_located((By.XPATH, xpath))
             )
 
-            # Click to activate cell
+            # Activate cell
             self.driver.execute_script("arguments[0].click();", cell)
-            time.sleep(0.5)
+            time.sleep(0.4)
 
-            # Clear & set value via JS (React-safe)
-            self.driver.execute_script("""
+            # React-safe update
+            self.driver.execute_script(
+                """
                 arguments[0].innerText = '';
                 arguments[0].innerText = arguments[1];
                 arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
-            """, cell, value)
+                arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                """,
+                cell,
+                value
+            )
 
             print(f"✅ Allocation set to {value}")
             time.sleep(0.8)
 
-        # Click Compute Cost Impact
+        # ================= CLICK COMPUTE COST IMPACT =================
         compute_btn = self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//button[normalize-space()='Compute Cost Impact']")
             )
         )
-        compute_btn.click()
+        self.driver.execute_script("arguments[0].click();", compute_btn)
         print("✅ Compute Cost Impact clicked")
-
         time.sleep(2)
 
-        # Scroll to cost graphs
-        graph_headers = [
+        # ================= HOVER COST IMPACT GRAPHS (CORRECT WAY) =================
+        graph_titles = [
             "Cost Impact Of Decision (Recommended Allocation)",
             "Cost Impact (Modified Allocation)"
         ]
 
-        actions = ActionChains(self.driver)
-
-        for title in graph_headers:
-            graph = self.wait.until(
+        for title in graph_titles:
+            svg = self.wait.until(
                 EC.presence_of_element_located(
-                    (By.XPATH, f"//h3[normalize-space()='{title}']")
+                    (
+                        By.XPATH,
+                        f"//h3[normalize-space()='{title}']/following-sibling::div//*[name()='svg']"
+                    )
                 )
             )
-            self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", graph)
-            actions.move_to_element(graph).perform()
-            time.sleep(0.8)
+
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", svg
+            )
+            time.sleep(0.5)
+
+            # Hover INSIDE svg so Highcharts fires tooltip
+            actions.move_to_element_with_offset(svg, 60, 60).perform()
+            time.sleep(1)
 
         print("✅ Cost graphs hovered successfully")
+
+    def hover_cost_graphs(self):
+        action = ActionChains(self.driver)
+
+        graph_titles = [
+            "Cost Impact Of Decision (Recommended Allocation)",
+            "Cost Impact (Modified Allocation)"
+        ]
+
+        for title in graph_titles:
+            svg = self.wait.until(
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        f"//h3[normalize-space()='{title}']/following-sibling::div//*[name()='svg']"
+                    )
+                )
+            )
+
+            # Move mouse slightly inside SVG
+            action.move_to_element_with_offset(svg, 50, 50).perform()
+            time.sleep(0.5)
+
+        print("✅ Highcharts graphs hovered (SVG container)")
 
 
