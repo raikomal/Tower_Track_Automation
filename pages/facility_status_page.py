@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 import time
 
 
@@ -12,11 +12,10 @@ class FacilityStatusPage:
         self.wait = WebDriverWait(driver, 40)
 
     # =========================================================
-    # =============== IMPACT ANALYSIS =========================
+    # IMPACT ANALYSIS TAB
     # =========================================================
-
+    # Script_ID:36
     def go_to_impact_analysis(self):
-        """Navigate to Impact Analysis and verify page load"""
         tab = self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//button[normalize-space()='Impact Analysis']")
@@ -30,37 +29,39 @@ class FacilityStatusPage:
             )
         )
 
-        time.sleep(1)
-        print("✅ Impact Analysis page fully loaded")
+        print("✅ Impact Analysis page loaded")
         return True
 
+    # =========================================================
+    # FILTERS
+    # =========================================================
+    # Script_ID:37
     def get_impact_filters(self):
-        """Read Impact Analysis filters safely"""
-        filters = {"facility": "", "start_date": "", "end_date": ""}
+        filters = {}
 
         try:
-            facility = self.driver.find_element(
-                By.XPATH, "//select[contains(@class,'p-3') and contains(@class,'rounded-md')]"
+            facility = self.wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//select[contains(@class,'rounded-md')]")
+                )
             )
             filters["facility"] = Select(facility).first_selected_option.text.strip()
         except:
-            pass
+            filters["facility"] = ""
 
         try:
-            start = self.driver.find_element(
+            filters["start_date"] = self.driver.find_element(
                 By.XPATH, "//label[contains(text(),'Start Date')]/following::input[1]"
-            )
-            filters["start_date"] = start.get_attribute("value")
+            ).get_attribute("value")
         except:
-            pass
+            filters["start_date"] = ""
 
         try:
-            end = self.driver.find_element(
+            filters["end_date"] = self.driver.find_element(
                 By.XPATH, "//label[contains(text(),'End Date')]/following::input[1]"
-            )
-            filters["end_date"] = end.get_attribute("value")
+            ).get_attribute("value")
         except:
-            pass
+            filters["end_date"] = ""
 
         print(f"ℹ️ Impact Filters: {filters}")
         return filters
@@ -68,132 +69,230 @@ class FacilityStatusPage:
     def select_impact_facility(self, facility_name):
         dropdown = self.wait.until(
             EC.element_to_be_clickable(
-                (By.XPATH, "//select[contains(@class,'p-3') and contains(@class,'text-xl')]")
+                (By.XPATH, "//select[contains(@class,'rounded-md')]")
             )
-        )
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", dropdown
         )
         Select(dropdown).select_by_visible_text(facility_name)
-        time.sleep(1)
-        print(f"✅ Impact Facility selected: {facility_name}")
+        print(f"✅ Facility selected: {facility_name}")
 
-    def select_impact_start_date(self, date_value):
-        start = self.wait.until(
+    def select_impact_start_date(self, value):
+        el = self.wait.until(
             EC.element_to_be_clickable(
-                (By.XPATH, "//label[normalize-space()='Start Date:']/following::input[1]")
+                (By.XPATH, "//label[contains(text(),'Start Date')]/following::input[1]")
             )
         )
-        start.clear()
-        start.send_keys(date_value)
-        time.sleep(0.5)
+        el.clear()
+        el.send_keys(value)
 
-    def select_impact_end_date(self, date_value):
-        end = self.wait.until(
+    def select_impact_end_date(self, value):
+        el = self.wait.until(
             EC.element_to_be_clickable(
-                (By.XPATH, "//label[normalize-space()='End Date:']/following::input[1]")
+                (By.XPATH, "//label[contains(text(),'End Date')]/following::input[1]")
             )
         )
-        end.clear()
-        end.send_keys(date_value)
-        time.sleep(0.5)
+        el.clear()
+        el.send_keys(value)
 
+    # Script_ID:38
     def click_get_recommendation(self):
         btn = self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//button[normalize-space()='Get Recommendation']")
             )
         )
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", btn
-        )
         btn.click()
-        time.sleep(2)
-        print("✅ Get Recommendation clicked")
+        print("✅ Recommendation requested")
 
+    # Script_ID:39
+    def wait_for_recommendation_to_finish(self, timeout=20):
+        """
+        SAFE wait:
+        Recommendation is complete when cost charts (Highcharts) appear
+        """
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        "//*[name()='svg' and ancestor::div[contains(@class,'highcharts')]]"
+                    )
+                )
+            )
+            print("✅ Recommendation backend processing finished")
+            return True
+        except:
+            print("⚠️ Recommendation finished but charts not detected (non-blocking)")
+            return False
+
+    # =========================================================
+    # MODIFY ALLOCATION + COST
+    # =========================================================
+    # Script_ID:40
     def modify_allocation_and_compute_cost(self):
-        """Modify allocation and hover cost impact graphs"""
-
-        # --- Modify Allocation ---
         self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//button[normalize-space()='Modify Allocation']")
             )
         ).click()
-        time.sleep(1)
 
         values = ["20", "50", "70"]
         cells = [
             "//tbody/tr[1]/td[3]",
             "//tbody/tr[2]/td[3]",
-            "//tbody/tr[3]/td[3]",
+            "//tbody/tr[3]/td[3]"
         ]
 
         for xp, val in zip(cells, values):
             cell = self.wait.until(EC.presence_of_element_located((By.XPATH, xp)))
-            self.driver.execute_script("arguments[0].click();", cell)
-            self.driver.execute_script(
-                """
+            self.driver.execute_script("""
                 arguments[0].innerText='';
                 arguments[0].innerText=arguments[1];
                 arguments[0].dispatchEvent(new Event('input',{bubbles:true}));
-                """,
-                cell, val
-            )
-            time.sleep(0.5)
-
-        # --- Compute Cost Impact ---
+            """, cell, val)
+        # Script_ID:41
         self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//button[normalize-space()='Compute Cost Impact']")
             )
         ).click()
 
-        time.sleep(4)  # wait for Highcharts
-
         self.hover_cost_graphs()
-        self.wait_for_simulation_planning_tool()
 
+    # Script_ID:42
     def hover_cost_graphs(self):
-        """REAL Highcharts hover (paths, not svg)"""
-        paths = self.wait.until(
-            EC.presence_of_all_elements_located(
-                (
-                    By.XPATH,
-                    "//*[name()='svg']"
-                    "//*[name()='g' and contains(@class,'highcharts-series')]"
-                    "//*[name()='path']"
+        svgs = self.driver.find_elements(
+            By.XPATH, "//*[name()='svg' and ancestor::div[contains(@class,'highcharts')]]"
+        )
+
+        for svg in svgs:
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", svg)
+            ActionChains(self.driver).move_to_element(svg).pause(0.3).perform()
+
+        print("✅ Cost graphs hovered")
+
+    # =========================================================
+    # SIMULATION PLANNING TOOL (SAFE)
+    # =========================================================
+    def simulation_tool_ready(self, timeout=20):
+        """
+        Simulation tool is READY only when Part dropdown has real options
+        """
+        try:
+            part_select = WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+                )
+            )
+
+            WebDriverWait(self.driver, timeout).until(
+                lambda d: len(Select(part_select).options) > 1
+            )
+
+            parts = [
+                o.text.strip()
+                for o in Select(part_select).options
+                if o.text.strip() and "Select" not in o.text
+            ]
+
+            print(f"✅ Simulation Tool READY (Parts loaded: {parts})")
+            return True
+
+        except Exception as e:
+            print(f"❌ Simulation Tool not ready: {e}")
+            return False
+
+    def run_simulation_planning_flow(self):
+        """
+        Full Simulation Planning Tool flow:
+        Select Source, Destination, Part, Quantity
+        Click Simulate
+        Hover Simulation graph
+        """
+
+        # Ensure Simulation section is visible
+        sim_header = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//h3[normalize-space()='Simulation Planning Tool']")
+            )
+        )
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", sim_header
+        )
+        time.sleep(1)
+
+        # ---------------- Source Facility ----------------
+        source = Select(
+            self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//label[contains(text(),'Source Facility')]/following::select[1]")
                 )
             )
         )
+        source.select_by_visible_text("PHX1 (Chandler, AZ)")
+        time.sleep(0.8)
 
-        actions = ActionChains(self.driver)
-
-        for path in paths[:6]:
-            self.driver.execute_script(
-                "arguments[0].scrollIntoView({block:'center'});", path
-            )
-            actions.move_to_element(path).pause(0.4).perform()
-
-        print("✅ Cost graphs hovered successfully")
-
-    def wait_for_simulation_planning_tool(self, timeout=8):
-        """SAFE – does not fail test if tool doesn't appear"""
-        try:
-            header = WebDriverWait(self.driver, timeout).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, "//h3[normalize-space()='Simulation Planning Tool']")
+        # ---------------- Destination Facility ----------------
+        dest = Select(
+            self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//label[contains(text(),'Destination Facility')]/following::select[1]")
                 )
             )
-            self.driver.execute_script(
-                "arguments[0].scrollIntoView({block:'center'});", header
-            )
-            print("✅ Simulation Planning Tool visible")
-            return True
-        except:
-            print("ℹ️ Simulation Planning Tool not rendered (valid business state)")
-            return False
+        )
+        dest.select_by_visible_text("PHX2 (Chandler, AZ)")
+        time.sleep(0.8)
 
+        # ---------------- Part ----------------
+        part = Select(
+            self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+                )
+            )
+        )
+        part.select_by_visible_text("Generator")
+        time.sleep(0.8)
+
+        # ---------------- Quantity ----------------
+        qty = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//label[contains(text(),'Quantity')]/following::input[1]")
+            )
+        )
+        qty.clear()
+        qty.send_keys("50")
+        time.sleep(0.5)
+
+        # ---------------- Simulate Button ----------------
+        simulate_btn = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//button[contains(text(),'Simulate')]")
+            )
+        )
+        simulate_btn.click()
+        print("✅ Simulation Reallocation clicked")
+
+        # ---------------- WAIT FOR SIMULATION GRAPH ----------------
+        self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//*[name()='svg' and ancestor::div[contains(text(),'Reallocation Cost Impact')]]")
+            )
+        )
+
+        # ---------------- HOVER SIMULATION GRAPH ----------------
+        svgs = self.driver.find_elements(
+            By.XPATH,
+            "//*[name()='svg' and ancestor::div[contains(text(),'Reallocation Cost Impact')]]"
+        )
+
+        for svg in svgs:
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", svg
+            )
+            ActionChains(self.driver).move_to_element(svg).pause(0.6).perform()
+
+        print("✅ Simulation graph hovered successfully")
+        return True
 
     # =========================================================
     # WINDOW / TAB HANDLING
@@ -202,6 +301,97 @@ class FacilityStatusPage:
         WebDriverWait(self.driver, timeout).until(
             lambda d: len(d.window_handles) > 1
             )
+
+    def run_simulation_planning_flow_safe(self):
+        """
+        Run simulation with safest possible inputs
+        """
+        try:
+            Select(
+                self.wait.until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, "//label[contains(text(),'Source Facility')]/following::select[1]")
+                    )
+                )
+            ).select_by_index(1)
+
+            Select(
+                self.wait.until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, "//label[contains(text(),'Destination Facility')]/following::select[1]")
+                    )
+                )
+            ).select_by_index(1)
+
+            part_select = Select(
+                self.wait.until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+                    )
+                )
+            )
+            part_select.select_by_index(1)
+
+            qty = self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//label[contains(text(),'Quantity')]/following::input[1]")
+                )
+            )
+            qty.clear()
+            qty.send_keys("20")
+
+            self.driver.find_element(
+                By.XPATH, "//button[contains(text(),'Simulate')]"
+            ).click()
+
+            print("✅ Simulation Reallocation triggered")
+            time.sleep(3)
+            return True
+
+        except Exception as e:
+            print(f"❌ Simulation execution failed: {e}")
+            return False
+
+    def hover_simulation_cost_graphs(self):
+        """
+        Hover Highcharts graph under 'Reallocation Cost Impact'
+        """
+        try:
+            header = self.wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//h3[contains(text(),'Reallocation Cost Impact')]")
+                )
+            )
+
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", header
+            )
+
+            WebDriverWait(self.driver, 20).until(
+                lambda d: len(
+                    d.find_elements(
+                        By.XPATH,
+                        "//h3[contains(text(),'Reallocation Cost Impact')]"
+                        "/following::svg[1]//*[name()='path']"
+                    )
+                ) > 0
+            )
+
+            bars = self.driver.find_elements(
+                By.XPATH,
+                "//h3[contains(text(),'Reallocation Cost Impact')]"
+                "/following::svg[1]//*[name()='path']"
+            )
+
+            for bar in bars:
+                ActionChains(self.driver).move_to_element(bar).pause(0.4).perform()
+
+            print("✅ Simulation graph hovered")
+            return True
+
+        except Exception as e:
+            print(f"⚠️ No simulation graphs found to hover: {e}")
+            return False
 
     # =========================================================
     # ONE-TIME PAGE READY (MAP SVG LOAD)
@@ -220,8 +410,40 @@ class FacilityStatusPage:
         return True
 
     # =========================================================
+    # STRATEGIC OVERVIEW – FULL PAGE READY CHECK
+    # =========================================================
+    # Script_ID:9
+    def verify_strategic_overview_loaded(self):
+        """
+        Verify Strategic Overview page is fully loaded.
+        Used by Strategic Overview flow + E2E flow.
+        """
+        # Script_ID:10
+        # 1️⃣ Page header check
+        self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//h2[normalize-space()='Status of All Facilities']")
+            )
+        )
+        # Script_ID:11
+        # 2️⃣ Highcharts map bubbles (true readiness signal)
+        self.wait.until(
+            EC.presence_of_element_located(
+                (
+                    By.CSS_SELECTOR,
+                    "g.highcharts-mapbubble-series path.highcharts-point"
+                )
+            )
+        )
+
+        print("✅ Strategic Overview loaded successfully")
+        return True
+
+
+    # =========================================================
     # SCROLL HELPERS
     # =========================================================
+    # Script_ID:12
     def scroll_to_map_section(self):
         header = self.wait.until(
             EC.presence_of_element_located(
@@ -235,6 +457,26 @@ class FacilityStatusPage:
         )
         time.sleep(0.3)
 
+    def scroll_to_simulation_section(self):
+        """
+        SAFE scroll – simulation tool may or may not exist
+        """
+        headers = self.driver.find_elements(
+            By.XPATH, "//h3[contains(text(),'Simulation Planning Tool')]"
+        )
+
+        if not headers:
+            print("ℹ️ Simulation Planning Tool not rendered (valid backend state)")
+            return False
+
+        header = headers[0]
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", header
+        )
+        time.sleep(1)
+        return True
+
+    # Script_ID:16
     def scroll_to_kpi_table(self):
         header = self.wait.until(
             EC.presence_of_element_located(
@@ -360,6 +602,7 @@ class FacilityStatusPage:
     # =========================================================
     # KPI VIEW SWITCH
     # =========================================================
+    # Script_ID:13
     def switch_kpi_view(self, view="table"):
         """
         view = 'table' or 'barchart'
@@ -376,6 +619,7 @@ class FacilityStatusPage:
     # =========================================================
     # BAR CHART → REALLOCATION RATE
     # =========================================================
+    # Script_ID:14
     def get_bar_chart_columns(self):
         self.wait.until(
             EC.presence_of_element_located(
@@ -390,6 +634,7 @@ class FacilityStatusPage:
             "path.highcharts-point"
         )
 
+    # Script_ID:15
     def hover_on_bar(self, bar):
         self.driver.execute_script(
             "arguments[0].scrollIntoView({block:'center'});",
@@ -407,6 +652,7 @@ class FacilityStatusPage:
     # =========================================================
     # SANKEY CHART (SAFE VERSION)
     # =========================================================
+
     def hover_flow_links(self, count=5):
         """
         Hover over Sankey flow links (Highcharts path elements)
@@ -425,6 +671,7 @@ class FacilityStatusPage:
 
         return True
 
+    # Script_ID:17
     def verify_sankey_chart_visible(self):
         self.wait.until(
             EC.presence_of_element_located(
@@ -449,6 +696,7 @@ class FacilityStatusPage:
         )
         ActionChains(self.driver).move_to_element(link).pause(0.6).perform()
 
+    # Script_ID:20
     def get_sankey_tooltip_text(self):
         tooltips = self.driver.find_elements(
             By.XPATH,
@@ -472,6 +720,7 @@ class FacilityStatusPage:
         # Accept node OR link tooltip
         return has_text and (has_number or has_arrow)
 
+    # Script_ID:1
     def hover_multiple_sankey_links(self, count=5):
         links = self.get_flow_links()
         hovered = 0
@@ -497,22 +746,58 @@ class FacilityStatusPage:
     # =========================================================
     # SANKEY DROPDOWN (Distributor → Facility Flow)
     # =========================================================
-    def get_sankey_dropdown(self):
+    # Script_ID:18
+    def change_sankey_flow_view(self, visible_text=None):
         """
-        Returns Sankey chart dropdown (Distributor selector)
+        Change Sankey dropdown (Distributor → Facility flow)
+        React-safe + waits for re-render
         """
-        return self.wait.until(
-            EC.presence_of_element_located(
+
+        dropdown = self.wait.until(
+            EC.element_to_be_clickable(
                 (
                     By.XPATH,
-                    "//div[@class='flex items-center gap-2 mr-2']//select"
+                    "//div[contains(@class,'items-center')]//select"
                 )
             )
         )
 
-    #
-    # ================= FACILITY STATUS READINESS SUMMARY =================
+        select = Select(dropdown)
+        # Script_ID:19
+        # Pick second option by default if none provided
+        if visible_text:
+            select.select_by_visible_text(visible_text)
+        else:
+            if len(select.options) < 2:
+                print("⚠️ Sankey dropdown has only one option")
+                return False
+            select.select_by_index(1)
 
+        # 🔥 Force React redraw
+        self.driver.execute_script(
+            """
+            arguments[0].dispatchEvent(
+                new Event('change', { bubbles: true })
+            );
+            """,
+            dropdown
+        )
+
+        # ✅ WAIT for Sankey SVG to update
+        self.wait.until(
+            EC.presence_of_element_located(
+                (
+                    By.XPATH,
+                    "//*[name()='svg']//*[name()='path' and contains(@class,'highcharts-point')]"
+                )
+            )
+        )
+
+        print("✅ Sankey dropdown changed and flow updated")
+        return True
+
+    # ================= FACILITY STATUS READINESS SUMMARY =================
+    # Script_ID:21
     def verify_readiness_chart_visible(self):
         self.wait.until(
             EC.presence_of_element_located(
@@ -521,50 +806,64 @@ class FacilityStatusPage:
         )
         return True
 
-    from selenium.webdriver.common.keys import Keys
-
     def select_readiness_viewpoint(self, view):
         """
-        React-safe select change (forces onChange to fire)
+        Switch Readiness dropdown (Facility / Resource / Alert / Transportation)
+        SAME PAGE – React state change
         """
 
         value_map = {
             "Facility": "facility",
             "Resource": "resource",
-            "Transportation": "transportation",
             "Alert": "alert",
+            "Transportation": "transportation",
         }
+        # Script_ID:22
 
+        # ✅ EXACT Readiness dropdown (anchored to Readiness header)
         select_el = self.wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//select[contains(@class,'w-56')]")
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "//h2[contains(text(),'Readiness')]/following::select[1]"
+                )
             )
         )
 
-        # 🔥 Force React onChange
+        # 🔥 React-safe change
         self.driver.execute_script(
             """
             const select = arguments[0];
             select.value = arguments[1];
+            select.dispatchEvent(new Event('input', { bubbles: true }));
             select.dispatchEvent(new Event('change', { bubbles: true }));
             """,
             select_el,
             value_map[view]
         )
 
-        # ✅ Wait until Transportation panel renders
-        if view == "Transportation":
-            self.wait.until(
-                EC.presence_of_element_located(
-                    (
-                        By.XPATH,
-                        "//h2[normalize-space()='Transportation Dependency Readiness Summary']"
-                    )
-                )
-            )
-
+        print(f"✅ Readiness switched to {view}")
         return True
 
+    # Script_ID:20
+    def verify_transportation_readiness_loaded(self):
+        """
+        Verifies Transportation readiness view
+        (same page, NOT new tab)
+        """
+        self.wait.until(
+            EC.presence_of_element_located(
+                (
+                    By.XPATH,
+                    "//h2[normalize-space()='Transportation Dependency Readiness Summary']"
+                )
+            )
+        )
+
+        print("✅ Transportation readiness section loaded")
+        return True
+
+    # Script_ID:23
     def hover_readiness_bars(self):
         """
         Hover ONLY readiness bars (Facility ViewPoint only)
@@ -589,6 +888,8 @@ class FacilityStatusPage:
             ActionChains(self.driver).move_to_element(bar).pause(0.4).perform()
 
         return True
+
+    # Script_ID:24
 
     def click_transportation_arrow(self):
         """
@@ -627,6 +928,7 @@ class FacilityStatusPage:
 
         return True
 
+    # Script_ID:26
     def verify_transportation_view_page_loaded(self):
         """
         New-tab-safe verification
@@ -645,6 +947,7 @@ class FacilityStatusPage:
 
         return True
 
+    # Script_ID:27
     def select_transportation_facility(self, facility_name="PHX1"):
         select_el = self.wait.until(
             EC.presence_of_element_located(
@@ -655,6 +958,7 @@ class FacilityStatusPage:
         Select(select_el).select_by_visible_text(facility_name)
         time.sleep(2)
 
+    # Script_ID:27
     def select_transportation_phase(self, phase_name="Phase B"):
         select_el = self.wait.until(
             EC.presence_of_element_located(
@@ -665,6 +969,7 @@ class FacilityStatusPage:
         Select(select_el).select_by_visible_text(phase_name)
         time.sleep(2)
 
+    # Script_ID:28
     def remove_part_category(self, category_name="Other"):
         """
         Remove a Part Category chip if present (safe, non-blocking)
@@ -724,6 +1029,7 @@ class FacilityStatusPage:
         )
         time.sleep(1.5)
 
+    # Script_ID:29
     def change_dependency_graph_view_slowly(self):
         dropdown = self.wait.until(
             EC.presence_of_element_located(
@@ -893,6 +1199,7 @@ class FacilityStatusPage:
 
         return [chip.text.strip() for chip in chips if chip.text.strip()]
     #operational insights Tab
+    # Script_ID:30
     def go_to_operational_insights(self):
         tab = self.wait.until(
             EC.element_to_be_clickable(
@@ -911,6 +1218,7 @@ class FacilityStatusPage:
         time.sleep(1.5)
         return True
 
+    # Script_ID:31
     def get_operational_filters(self):
         return {
             "status": Select(
@@ -938,6 +1246,7 @@ class FacilityStatusPage:
             ).first_selected_option.text.strip()
         }
 
+    # Script_ID:32
     def get_operational_allocation_table(self):
         rows = self.driver.find_elements(
             By.XPATH, "//table//tbody/tr"
@@ -958,6 +1267,7 @@ class FacilityStatusPage:
         print(f"ℹ️ Allocation rows: {len(data)}")
         return data
 
+    # Script_ID:33
     def get_part_inventory_details(self):
         labels = self.driver.find_elements(
             By.XPATH, "//div[contains(text(),'Part Inventory Details')]"
@@ -1020,6 +1330,7 @@ class FacilityStatusPage:
         time.sleep(2.5)  # 👀 human visible
         print(f"✅ Part selected: {value}")
     #tab location navigation in the operational insights
+    # Script_ID:34
     def open_part_dependency_graph_tab(self):
         """
         Click Part Dependency Graph arrow (Operational Insights)
@@ -1064,6 +1375,7 @@ class FacilityStatusPage:
         print("✅ Part Dependency Graph opened in new tab")
         return parent
 
+    # Script_ID:35
     def select_first_three_dependency_options(self):
         """
         Select only the required 3 options in Part Dependency Graph dropdown
@@ -1093,16 +1405,6 @@ class FacilityStatusPage:
 
         print("✅ Selected required dependency options")
 
-    def close_child_and_return(self, parent_window):
-        current = self.driver.current_window_handle
-
-        if current != parent_window:
-            self.driver.close()
-
-        self.driver.switch_to.window(parent_window)
-        time.sleep(1.5)
-
-        print("✅ Part Dependency Graph tab closed and returned to parent")
 
     # ================= PART DEPENDENCY GRAPH =================
 

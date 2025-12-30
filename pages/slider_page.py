@@ -60,6 +60,7 @@ class SliderPage:
         """
         self.click_slider_button(slider_name)
 
+
     def hover_and_click_facility_status_tracker(self):
         """
         Legacy combined navigation used by older tests
@@ -93,6 +94,7 @@ class SliderPage:
         self.click_slider_button("Supply Insights")
         self.click_slider_button("Part Allocation Insights")
 
+    # Script_ID:7
     # ---------------- FACILITY STATUS TRACKER ONLY ----------------
     def open_facility_status_tracker(self):
         """

@@ -24,6 +24,7 @@ def test_facility_status_readiness_summary(driver):
     )
 
     # ================= SO-15 =================
+    # Script_ID:25
     for view in ["Resource", "Alert"]:
         facility.select_readiness_viewpoint(view)
 
