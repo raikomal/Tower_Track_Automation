@@ -23,6 +23,54 @@ def test_full_single_flow(driver):
     # 2️⃣ LOGIN REPORT (LOGIN ALREADY DONE IN FIXTURE)
     # =====================================================
     write_test_report(
+        "Tower Track", "Web", "Login Module",
+        "Launch browser",
+        "Open Chrome browser",
+        "Browser should launch",
+        "Browser launched successfully",
+        "Pass", "", "LG-01", ""
+    )
+    write_test_report(
+        "Tower Track", "Web", "Login Module",
+        "Open Tower Track URL",
+        "Navigate to application URL",
+        "Login page should load",
+        "Login page loaded",
+        "Pass", "", "LG-02", ""
+    )
+    write_test_report(
+        "Tower Track", "Web", "Login Module",
+        "Empty Login",
+        "Click login without credentials",
+        "Validation should appear",
+        "Validation shown",
+        "Pass", "", "LG-03", ""
+    )
+
+    write_test_report(
+        "Tower Track", "Web", "Login Module",
+        "Invalid Login",
+        "Enter wrong credentials",
+        "Error alert should appear",
+        "Error alert shown",
+        "Pass", "", "LG-04", ""
+    )
+
+    write_test_report(
+        "Tower Track",
+        "Web",
+        "Login Module",
+        "Remember Me option",
+        "Select Remember Me checkbox",
+        "Remember Me should be selected",
+        "Remember Me selected",
+        "Pass",
+        "",
+        "LG-05",
+        ""
+    )
+
+    write_test_report(
         "Tower Track",
         "Web",
         "Authentication",

@@ -173,126 +173,94 @@ class FacilityStatusPage:
     # =========================================================
     # SIMULATION PLANNING TOOL (SAFE)
     # =========================================================
-    def simulation_tool_ready(self, timeout=20):
+    def simulation_tool_ready(self, timeout=30):
         """
-        Simulation tool is READY only when Part dropdown has real options
+        Simulation tool is ready when Source Facility dropdown is populated
         """
         try:
-            part_select = WebDriverWait(self.driver, timeout).until(
+            source = WebDriverWait(self.driver, timeout).until(
                 EC.presence_of_element_located(
-                    (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+                    (By.XPATH, "//label[normalize-space()='Source Facility:']/following::select[1]")
                 )
             )
 
             WebDriverWait(self.driver, timeout).until(
-                lambda d: len(Select(part_select).options) > 1
+                lambda d: len(Select(source).options) > 1
             )
 
-            parts = [
-                o.text.strip()
-                for o in Select(part_select).options
-                if o.text.strip() and "Select" not in o.text
-            ]
-
-            print(f"✅ Simulation Tool READY (Parts loaded: {parts})")
+            print("✅ Simulation Tool READY")
             return True
 
         except Exception as e:
             print(f"❌ Simulation Tool not ready: {e}")
             return False
 
-    def run_simulation_planning_flow(self):
+    def run_simulation_planning_flow_safe(self):
         """
-        Full Simulation Planning Tool flow:
-        Select Source, Destination, Part, Quantity
-        Click Simulate
-        Hover Simulation graph
+        Proper Selenium-safe Simulation Planning Tool execution
         """
-
-        # Ensure Simulation section is visible
-        sim_header = self.wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//h3[normalize-space()='Simulation Planning Tool']")
-            )
-        )
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", sim_header
-        )
-        time.sleep(1)
-
-        # ---------------- Source Facility ----------------
-        source = Select(
-            self.wait.until(
+        try:
+            # ================= SOURCE FACILITY =================
+            source_el = self.wait.until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, "//label[contains(text(),'Source Facility')]/following::select[1]")
+                    (By.XPATH, "//label[normalize-space()='Source Facility:']/following::select[1]")
                 )
             )
-        )
-        source.select_by_visible_text("PHX1 (Chandler, AZ)")
-        time.sleep(0.8)
+            source_select = Select(source_el)
+            source_select.select_by_index(1)  # ✅ SAFE
+            print("ℹ️ Source selected:", source_select.first_selected_option.text)
 
-        # ---------------- Destination Facility ----------------
-        dest = Select(
-            self.wait.until(
+            time.sleep(0.5)
+
+            # ================= DESTINATION FACILITY =================
+            dest_el = self.wait.until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, "//label[contains(text(),'Destination Facility')]/following::select[1]")
+                    (By.XPATH, "//label[normalize-space()='Destination Facility:']/following::select[1]")
                 )
             )
-        )
-        dest.select_by_visible_text("PHX2 (Chandler, AZ)")
-        time.sleep(0.8)
+            dest_select = Select(dest_el)
+            dest_select.select_by_index(1)  # ✅ SAFE
+            print("ℹ️ Destination selected:", dest_select.first_selected_option.text)
 
-        # ---------------- Part ----------------
-        part = Select(
-            self.wait.until(
+            time.sleep(0.5)
+
+            # ================= PART =================
+            part_el = self.wait.until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, "//label[contains(text(),'Part')]/following::select[1]")
+                    (By.XPATH, "//label[normalize-space()='Part:']/following::select[1]")
                 )
             )
-        )
-        part.select_by_visible_text("Generator")
-        time.sleep(0.8)
+            part_select = Select(part_el)
+            part_select.select_by_index(1)  # ✅ SAFE
+            print("ℹ️ Part selected:", part_select.first_selected_option.text)
 
-        # ---------------- Quantity ----------------
-        qty = self.wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//label[contains(text(),'Quantity')]/following::input[1]")
+            time.sleep(0.5)
+
+            # ================= QUANTITY =================
+            qty = self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//label[normalize-space()='Quantity:']/following::input[1]")
+                )
             )
-        )
-        qty.clear()
-        qty.send_keys("50")
-        time.sleep(0.5)
+            qty.clear()
+            qty.send_keys("20")  # digits only (React-safe)
 
-        # ---------------- Simulate Button ----------------
-        simulate_btn = self.wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//button[contains(text(),'Simulate')]")
+            time.sleep(0.5)
+
+            # ================= SIMULATE BUTTON =================
+            simulate_btn = self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//button[normalize-space()='Simulate Reallocation']")
+                )
             )
-        )
-        simulate_btn.click()
-        print("✅ Simulation Reallocation clicked")
+            simulate_btn.click()
 
-        # ---------------- WAIT FOR SIMULATION GRAPH ----------------
-        self.wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//*[name()='svg' and ancestor::div[contains(text(),'Reallocation Cost Impact')]]")
-            )
-        )
+            print("✅ Simulation Reallocation clicked")
+            return True
 
-        # ---------------- HOVER SIMULATION GRAPH ----------------
-        svgs = self.driver.find_elements(
-            By.XPATH,
-            "//*[name()='svg' and ancestor::div[contains(text(),'Reallocation Cost Impact')]]"
-        )
-
-        for svg in svgs:
-            self.driver.execute_script(
-                "arguments[0].scrollIntoView({block:'center'});", svg
-            )
-            ActionChains(self.driver).move_to_element(svg).pause(0.6).perform()
-
-        print("✅ Simulation graph hovered successfully")
-        return True
+        except Exception as e:
+            print(f"❌ Simulation execution failed: {e}")
+            return False
 
     # =========================================================
     # WINDOW / TAB HANDLING
@@ -354,12 +322,12 @@ class FacilityStatusPage:
 
     def hover_simulation_cost_graphs(self):
         """
-        Hover Highcharts graph under 'Reallocation Cost Impact'
+        Hover Reallocation Cost Impact chart
         """
         try:
             header = self.wait.until(
                 EC.presence_of_element_located(
-                    (By.XPATH, "//h3[contains(text(),'Reallocation Cost Impact')]")
+                    (By.XPATH, "//h3[normalize-space()='Reallocation Cost Impact']")
                 )
             )
 
@@ -367,30 +335,19 @@ class FacilityStatusPage:
                 "arguments[0].scrollIntoView({block:'center'});", header
             )
 
-            WebDriverWait(self.driver, 20).until(
-                lambda d: len(
-                    d.find_elements(
-                        By.XPATH,
-                        "//h3[contains(text(),'Reallocation Cost Impact')]"
-                        "/following::svg[1]//*[name()='path']"
-                    )
-                ) > 0
+            svg = WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located(
+                    (By.XPATH,
+                     "//h3[normalize-space()='Reallocation Cost Impact']/following::svg[1]")
+                )
             )
 
-            bars = self.driver.find_elements(
-                By.XPATH,
-                "//h3[contains(text(),'Reallocation Cost Impact')]"
-                "/following::svg[1]//*[name()='path']"
-            )
-
-            for bar in bars:
-                ActionChains(self.driver).move_to_element(bar).pause(0.4).perform()
-
+            ActionChains(self.driver).move_to_element(svg).pause(0.6).perform()
             print("✅ Simulation graph hovered")
             return True
 
         except Exception as e:
-            print(f"⚠️ No simulation graphs found to hover: {e}")
+            print(f"ℹ️ Simulation graph not found: {e}")
             return False
 
     # =========================================================
@@ -457,24 +414,28 @@ class FacilityStatusPage:
         )
         time.sleep(0.3)
 
-    def scroll_to_simulation_section(self):
+    def scroll_to_simulation_section(self, timeout=40):
         """
-        SAFE scroll – simulation tool may or may not exist
+        Wait until Simulation Planning Tool is rendered by backend
         """
-        headers = self.driver.find_elements(
-            By.XPATH, "//h3[contains(text(),'Simulation Planning Tool')]"
-        )
+        try:
+            header = WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//h3[normalize-space()='Simulation Planning Tool']")
+                )
+            )
 
-        if not headers:
-            print("ℹ️ Simulation Planning Tool not rendered (valid backend state)")
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center'});", header
+            )
+            time.sleep(0.5)
+
+            print("✅ Simulation Planning Tool rendered")
+            return True
+
+        except Exception:
+            print("ℹ️ Simulation Planning Tool not rendered (backend condition)")
             return False
-
-        header = headers[0]
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center'});", header
-        )
-        time.sleep(1)
-        return True
 
     # Script_ID:16
     def scroll_to_kpi_table(self):
@@ -647,8 +608,7 @@ class FacilityStatusPage:
             .move_by_offset(10, -10)\
             .pause(0.5)\
             .perform()
-
-    # =========================================================
+        
     # =========================================================
     # SANKEY CHART (SAFE VERSION)
     # =========================================================

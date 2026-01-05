@@ -235,6 +235,10 @@ def login_and_reach_dashboard():
 
     login.enter_email("user@gmail.com")
     login.enter_password("12345")
+
+    # ✅ CLICK REMEMBER ME HERE (ONLY FOR VALID LOGIN)
+    login.click_remember_me_if_not_selected()
+
     login.click_login()
     login.accept_alert_if_present()
 

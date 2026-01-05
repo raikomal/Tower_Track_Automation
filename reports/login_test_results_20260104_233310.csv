@@ -1,0 +1,5 @@
+﻿Project,Application,Micro_Application,Test_Case_Title,Test_Description,Expected_Result,Actual_Result,Status,Remark,Task_ID,Ticket_ID
+Tower Track,Web,Authentication,User Login,Login with valid credentials,Dashboard should load,Dashboard loaded successfully,Pass,,LOGIN-01,
+Tower Track,Web,Strategic Overview,Open Facility Status Tracker,Navigate via slider,Page should open,Opened,Pass,,SO-01,
+Tower Track,Web,Strategic Overview,Verify map load,Wait for map,Map should render,Map rendered,Pass,,SO-02,
+Tower Track,Web,Strategic Overview,Verify KPI cards,Read KPIs,KPIs should appear,"[80.1, 12.4, 7.5]",Pass,,SO-03,
